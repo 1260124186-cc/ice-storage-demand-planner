@@ -1,0 +1,101 @@
+{
+  "site_id": "changshu-plant-c2",
+  "schedule": [
+    {
+      "hour": 0,
+      "cooling_load_kw_th": 40.7,
+      "storage_start_kwh_th": 10.0,
+      "charge_kwh_th": 22.333333333333332,
+      "discharge_kwh_th": 0.0,
+      "direct_chiller_kw_th": 40.7,
+      "chiller_output_kw_th": 63.03333333333333,
+      "grid_power_kw": 20.333333333333332,
+      "storage_end_kwh_th": 30.0
+    },
+    {
+      "hour": 1,
+      "cooling_load_kw_th": 55.3,
+      "storage_start_kwh_th": 30.0,
+      "charge_kwh_th": 17.0,
+      "discharge_kwh_th": 0.0,
+      "direct_chiller_kw_th": 55.3,
+      "chiller_output_kw_th": 72.3,
+      "grid_power_kw": 23.322580645161292,
+      "storage_end_kwh_th": 45.0
+    },
+    {
+      "hour": 2,
+      "cooling_load_kw_th": 71.4,
+      "storage_start_kwh_th": 45.0,
+      "charge_kwh_th": 0.5,
+      "discharge_kwh_th": 0.0,
+      "direct_chiller_kw_th": 71.4,
+      "chiller_output_kw_th": 71.9,
+      "grid_power_kw": 23.193548387096776,
+      "storage_end_kwh_th": 45.0
+    },
+    {
+      "hour": 3,
+      "cooling_load_kw_th": 82.2,
+      "storage_start_kwh_th": 45.0,
+      "charge_kwh_th": 0.0,
+      "discharge_kwh_th": 29.55,
+      "direct_chiller_kw_th": 54.1275,
+      "chiller_output_kw_th": 54.1275,
+      "grid_power_kw": 17.460483870967742,
+      "storage_end_kwh_th": 15.0
+    },
+    {
+      "hour": 4,
+      "cooling_load_kw_th": 79.3,
+      "storage_start_kwh_th": 15.0,
+      "charge_kwh_th": 0.0,
+      "discharge_kwh_th": 14.85,
+      "direct_chiller_kw_th": 65.1925,
+      "chiller_output_kw_th": 65.1925,
+      "grid_power_kw": 21.02983870967742,
+      "storage_end_kwh_th": 0.0
+    },
+    {
+      "hour": 5,
+      "cooling_load_kw_th": 64.9,
+      "storage_start_kwh_th": 0.0,
+      "charge_kwh_th": 0.0,
+      "discharge_kwh_th": 0.0,
+      "direct_chiller_kw_th": 64.9,
+      "chiller_output_kw_th": 64.9,
+      "grid_power_kw": 20.93548387096774,
+      "storage_end_kwh_th": 0.0
+    },
+    {
+      "hour": 6,
+      "cooling_load_kw_th": 50.0,
+      "storage_start_kwh_th": 0.0,
+      "charge_kwh_th": 0.0,
+      "discharge_kwh_th": 0.0,
+      "direct_chiller_kw_th": 50.0,
+      "chiller_output_kw_th": 50.0,
+      "grid_power_kw": 16.129032258064516,
+      "storage_end_kwh_th": 0.0
+    },
+    {
+      "hour": 7,
+      "cooling_load_kw_th": 37.3,
+      "storage_start_kwh_th": 0.0,
+      "charge_kwh_th": 11.11111111111111,
+      "discharge_kwh_th": 0.0,
+      "direct_chiller_kw_th": 37.3,
+      "chiller_output_kw_th": 48.41111111111111,
+      "grid_power_kw": 15.616487455197133,
+      "storage_end_kwh_th": 10.0
+    }
+  ],
+  "summary": {
+    "energy_cost": 124.1618064516129,
+    "daytime_peak_kw": 23.322580645161292,
+    "billed_demand_kw": 25.0,
+    "demand_charge": 350.0,
+    "total_cost": 474.1618064516129,
+    "terminal_storage_kwh_th": 10.0
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "site_id": "demo-edge",
+  "cop": 2.5,
+  "chiller_capacity_kw_th": 60.0,
+  "storage": {
+    "capacity_kwh_th": 20.0,
+    "inventory_step_kwh_th": 5.0,
+    "initial_kwh_th": 5.0,
+    "terminal_kwh_th": 5.0,
+    "max_charge_kw_th": 10.0,
+    "max_discharge_kw_th": 10.0,
+    "charge_efficiency": 1.0,
+    "discharge_efficiency": 1.0,
+    "standing_loss_per_h": 0.0
+  },
+  "demand": {
+    "previous_peak_kw": 0.0,
+    "rounding_kw": 1.0,
+    "charge_per_kw": 0.0
+  },
+  "periods": [
+    {
+      "cooling_load_kw_th": 30.0,
+      "price_per_kwh": 1.0
+    },
+    {
+      "cooling_load_kw_th": 30.0,
+      "price_per_kwh": 1.0
+    }
+  ]
+}

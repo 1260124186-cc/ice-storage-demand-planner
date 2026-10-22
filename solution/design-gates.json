@@ -1,0 +1,264 @@
+{
+  "name": "ice-storage-demand-planner",
+  "category": "F-能源系统",
+  "scene": "制造园区冰蓄冷站在分时电价与月度需量电费下的逐小时日前调度",
+  "core_task": "修正现有规划程序，按蓄冰效率、槽体损耗、需量阶梯和期末库存约束求出全天最低总费用的可行冷机与蓄冰调度",
+  "data_provenance": {
+    "kind": "generated",
+    "source": "由 solution/generate_data.py 按固定规则生成：冷却负荷围绕办公与生产班次曲线叠加随机扰动，电价按谷、平、峰三段生成；不冒充现场采集记录",
+    "seed": 20261022
+  },
+  "answer_verification": "测试中的独立 reference 在 inventory_step_kwh_th 网格上枚举每小时可用蓄冰状态，用 Decimal 精确累加电度费与需量费，并对 (期末库存, 计费需量) 状态做动态规划；参考解和测试均按同一套题面公式独立实现，再逐项复算样例及小规模全枚举案例",
+  "environment": {
+    "base_image": "python:3.12.8-slim-bookworm@sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0",
+    "dependencies_locked": true,
+    "allow_internet": true,
+    "network_reason": "业务程序只依赖 Python 标准库；判定阶段需要按哈希从 PyPI 安装 pytest，真实模型运行还需要容器内 Codex CLI 连接本地代理",
+    "architectures": [
+      "amd64",
+      "arm64"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "R1",
+      "statement": "蓄冰槽按期末网格、充放能效率、静置损耗和最大充放能功率更新库存，并正确计算可供给冷负荷",
+      "observable": "advance_inventory 返回的期末库存和供给负荷与题面公式一致，超功率状态被拒绝",
+      "expected_basis": "end=(1-loss)*start+eta_c*charge-discharge，served=eta_d*discharge",
+      "test_ids": [
+        "T1",
+        "T2",
+        "T3",
+        "T4"
+      ]
+    },
+    {
+      "id": "R2",
+      "statement": "需量电费以本月历史峰值和当日最大 Grid power 中的较大值为基础，向上取整到 demand_rounding_kw",
+      "observable": "billed_demand_kw 返回正确的取整需量，summary 中的需量费按该值只计一次",
+      "expected_basis": "billed=ceil(max(previous_peak_kw, daytime_peak_kw)/rounding_kw)*rounding_kw",
+      "test_ids": [
+        "T5",
+        "T6",
+        "T7"
+      ]
+    },
+    {
+      "id": "R3",
+      "statement": "在所有满足库存步长、容量、充放能功率、冷机容量、负荷平衡和期末库存要求的状态中，使电度费与需量费之和全局最小，并按题面规则打破平局",
+      "observable": "输出的小时级 schedule、energy_cost、billed_demand_kw 与 total_cost 和独立动态规划结果一致",
+      "expected_basis": "对 (hour, storage_end_step, billed_demand) 做精确代价动态规划，最终选总费用最小且期末库存序列字典序最小的路径",
+      "test_ids": [
+        "T8",
+        "T9",
+        "T10",
+        "T11",
+        "T14",
+        "T15",
+        "T16"
+      ]
+    },
+    {
+      "id": "R4",
+      "statement": "输入结构、数值范围、库存可执行性和求解可行性有问题时非零退出，且不新建也不覆盖输出文件",
+      "observable": "非法或不可行输入返回非零状态，已有输出内容保持不变",
+      "expected_basis": "先完整校验并在内存中求出可行解，再通过同目录临时文件加 os.replace 一次写入最终结果",
+      "test_ids": [
+        "T12",
+        "T13"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "id": "T1",
+      "kind": "normal",
+      "requirement_ids": [
+        "R1"
+      ],
+      "expected": "充电效率只作用于接入蓄冰槽的冷量"
+    },
+    {
+      "id": "T2",
+      "kind": "normal",
+      "requirement_ids": [
+        "R1"
+      ],
+      "expected": "放电效率作用于对外供给的冷量，库存按实际取用扣减"
+    },
+    {
+      "id": "T3",
+      "kind": "boundary",
+      "requirement_ids": [
+        "R1"
+      ],
+      "expected": "静置损耗先作用于期初库存，再叠加当期充放能"
+    },
+    {
+      "id": "T4",
+      "kind": "boundary",
+      "requirement_ids": [
+        "R1"
+      ],
+      "expected": "超过最大充能或放能功率的单步库存变化被拒绝"
+    },
+    {
+      "id": "T5",
+      "kind": "normal",
+      "requirement_ids": [
+        "R2"
+      ],
+      "expected": "非整数倍峰值向上取整到 demand_rounding_kw"
+    },
+    {
+      "id": "T6",
+      "kind": "boundary",
+      "requirement_ids": [
+        "R2"
+      ],
+      "expected": "历史峰值高于当日峰值时采用历史峰值"
+    },
+    {
+      "id": "T7",
+      "kind": "normal",
+      "requirement_ids": [
+        "R2"
+      ],
+      "expected": "summary 中电度费与需量费相加得到 total_cost"
+    },
+    {
+      "id": "T8",
+      "kind": "normal",
+      "requirement_ids": [
+        "R3"
+      ],
+      "expected": "需量费足够高时通过蓄冰转移负荷并压低全天峰值"
+    },
+    {
+      "id": "T9",
+      "kind": "normal",
+      "requirement_ids": [
+        "R3"
+      ],
+      "expected": "充放能效率与损耗使简单的低价充电策略不再最优"
+    },
+    {
+      "id": "T10",
+      "kind": "boundary",
+      "requirement_ids": [
+        "R3"
+      ],
+      "expected": "期末库存必须精确达到 terminal_kwh_th，允许中途库存按损耗变化"
+    },
+    {
+      "id": "T11",
+      "kind": "error",
+      "requirement_ids": [
+        "R3"
+      ],
+      "expected": "没有可达期末库存或冷机容量不足时非零退出"
+    },
+    {
+      "id": "T12",
+      "kind": "error",
+      "requirement_ids": [
+        "R4"
+      ],
+      "expected": "非法字段、非有限数值和库存步长不符时非零退出且不生成输出"
+    },
+    {
+      "id": "T13",
+      "kind": "error",
+      "requirement_ids": [
+        "R4"
+      ],
+      "expected": "失败时已有输出文件内容保持不变"
+    },
+    {
+      "id": "T14",
+      "kind": "normal",
+      "requirement_ids": [
+        "R3"
+      ],
+      "expected": "输出逐小时字段完整，直接冷机出力与蓄冰供冷之和等于该小时冷负荷"
+    },
+    {
+      "id": "T15",
+      "kind": "normal",
+      "requirement_ids": [
+        "R3"
+      ],
+      "expected": "随包固定种子样例的调度与总费用和独立动态规划一致"
+    },
+    {
+      "id": "T16",
+      "kind": "boundary",
+      "requirement_ids": [
+        "R3"
+      ],
+      "expected": "总费用相同时选择期末库存序列字典序更小的调度"
+    }
+  ],
+  "challenges": [
+    {
+      "id": "C1",
+      "description": "蓄冰槽的充电效率、放电效率、静置损耗和功率上限共同决定下一小时可用库存",
+      "failure_mode": "把充入冷量直接当作入库量或把取用库存直接当作供冷量，导致库存与负荷平衡同时偏差",
+      "fix_action": "在 storage 模块按先损耗后充放能的顺序实现库存递推，并显式检查最大充放能功率",
+      "requirement_ids": [
+        "R1"
+      ],
+      "test_ids": [
+        "T1",
+        "T2",
+        "T3",
+        "T4"
+      ]
+    },
+    {
+      "id": "C2",
+      "description": "需量费由历史峰值与当日峰值取大后向上取整，且只在汇总中计费一次",
+      "failure_mode": "只按当日峰值计费或漏掉向上取整和历史峰值棘轮，导致峰段策略和总费用错误",
+      "fix_action": "在 billing 模块实现 Decimal 向上取整需量并把需量费作为全天一次性成本",
+      "requirement_ids": [
+        "R2"
+      ],
+      "test_ids": [
+        "T5",
+        "T6",
+        "T7"
+      ]
+    },
+    {
+      "id": "C3",
+      "description": "在离散库存网格上同时优化分时电度费、全天峰值需量费和期末库存",
+      "failure_mode": "按电价高低做贪心充放能，忽略冷机容量、放电供冷上限或期末库存，得到局部可行但非全局最优的调度",
+      "fix_action": "对期末库存与已计费需量做状态动态规划，保留每状态最低电度费及字典序最小库存路径，最后比较全日总费用",
+      "requirement_ids": [
+        "R3"
+      ],
+      "test_ids": [
+        "T8",
+        "T9",
+        "T10",
+        "T11",
+        "T14",
+        "T15",
+        "T16"
+      ]
+    },
+    {
+      "id": "C4",
+      "description": "输入校验和原子写入必须在所有失败路径上保证没有半成品",
+      "failure_mode": "先创建输出再计算，或在库存步长、效率范围和不可行期末库存有问题时仍写出文件",
+      "fix_action": "在求解前完成结构和数值校验，求解成功后经临时文件原子替换输出，失败路径不触碰目标文件",
+      "requirement_ids": [
+        "R4"
+      ],
+      "test_ids": [
+        "T12",
+        "T13"
+      ]
+    }
+  ]
+}
