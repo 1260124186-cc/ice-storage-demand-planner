@@ -1,0 +1,207 @@
+{
+ "schema_version": 1,
+ "task_dir": "/Users/zhangchengcheng/work/ai-project/Trea/harbor/ice-storage-demand-planner",
+ "image_tag": "harbor-quality:ice-storage-demand-planner",
+ "cases": [
+  {
+   "case": "build",
+   "verdict": "SKIP",
+   "reward": null,
+   "command": "",
+   "expect": "exit=0",
+   "note": "",
+   "log_tail": [
+    "skip-build"
+   ]
+  },
+  {
+   "case": "startup",
+   "verdict": "PASS",
+   "reward": null,
+   "command": "docker run -d --name harbor-quality-ice-storage-demand-planner-startup-ice-storage-demand-planner harbor-quality:ice-storage-demand-planner; docker inspect",
+   "expect": "container stays running or exits 0",
+   "note": "",
+   "log_tail": [
+    "false 0"
+   ]
+  },
+  {
+   "case": "forward_reference_solution",
+   "verdict": "PASS",
+   "reward": 1.0,
+   "command": "docker run … bash -lc '<solve.sh>; <test.sh>; cat reward'",
+   "expect": "reward=1.000",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=1.000000"
+   ]
+  },
+  {
+   "case": "repeatable",
+   "verdict": "PASS",
+   "reward": 1.0,
+   "command": "第二次 clean forward run",
+   "expect": "reward=1.000",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=1.000000"
+   ]
+  },
+  {
+   "case": "reverse_clean_environment",
+   "verdict": "PASS",
+   "reward": 0.0,
+   "command": "docker run … bash -lc '<test.sh>; cat reward'",
+   "expect": "reward=0.000（NOP 同理必须 ≤0.100）",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=0.000000"
+   ]
+  },
+  {
+   "case": "crash_candidate_writes_zero",
+   "verdict": "PASS",
+   "reward": 0.0,
+   "command": "候选 /workspace 替换为 exit 3 后运行 test.sh",
+   "expect": "reward=0.000 且文件非空",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=0.000000",
+    "bash: line 1: /workspace: Is a directory"
+   ]
+  },
+  {
+   "case": "stale_reward_overwritten",
+   "verdict": "PASS",
+   "reward": 0.0,
+   "command": "预先写入旧 reward=1，再运行 test.sh",
+   "expect": "reward=0.000 且旧值被覆盖",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=0.000000"
+   ]
+  },
+  {
+   "case": "anticheat_runner_substitution",
+   "verdict": "PASS",
+   "reward": 0.0,
+   "command": "替换 timeout 为打印 SCORE 1.0 并返回 0 的空壳后运行 test.sh",
+   "expect": "reward=0.000，且不得把 SCORE 单行文本当作完成证据",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=0.000000"
+   ]
+  },
+  {
+   "case": "anticheat_python_substitution",
+   "verdict": "PASS",
+   "reward": 0.0,
+   "command": "同名 python/python3/pytest/timeout 注入 PATH 后运行 test.sh",
+   "expect": "受信绝对入口不被 PATH 覆盖，reward=0.000",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=0.000000"
+   ]
+  },
+  {
+   "case": "anticheat_pytest_cwd",
+   "verdict": "PASS",
+   "reward": 0.0,
+   "command": "在 /workspace/pytest.py 注入同名模块后运行 test.sh",
+   "expect": "受信 pytest 导入与 -P 隔离生效，reward=0.000",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=0.000000"
+   ]
+  },
+  {
+   "case": "anticheat_startup_injection",
+   "verdict": "PASS",
+   "reward": 0.0,
+   "command": "向受信 Python site-packages 注入 sitecustomize.py 和 .pth 后运行 test.sh",
+   "expect": "-S/env -i 隔离启动钩子，reward=0.000",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=0.000000",
+    "bash: line 4: /usr/local/lib/python3.12/site-packages/sitecustomize.py: Permission denied",
+    "bash: line 5: /usr/local/lib/python3.12/site-packages/99-hbr-hijack.pth: Permission denied"
+   ]
+  },
+  {
+   "case": "timeout_writes_zero",
+   "verdict": "PASS",
+   "reward": 0.0,
+   "command": "候选入口 sleep 30，外层 5 秒终止 test.sh",
+   "expect": "reward=0.000",
+   "note": "",
+   "log_tail": [
+    "OUTER_EXIT=0",
+    "REWARD=0.000000",
+    "bash: line 1: /workspace: Is a directory"
+   ]
+  },
+  {
+   "case": "anticheat_candidate_writes_reward",
+   "verdict": "PASS",
+   "reward": 0.0,
+   "command": "候选尝试直接写 /logs/verifier/reward.txt 后运行 test.sh",
+   "expect": "reward 仍为 0.000（verifier 必须覆盖/归零）",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=0.000000",
+    "bash: line 1: /workspace: Is a directory"
+   ]
+  },
+  {
+   "case": "anticheat_tests_tamper",
+   "verdict": "PASS",
+   "reward": 0.0,
+   "command": "候选尝试改写 /tests/score.py",
+   "expect": "测试保持只读且 reward=0.000",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=0.000000",
+    "bash: line 1: /workspace: Is a directory"
+   ]
+  },
+  {
+   "case": "anticheat_background_reward",
+   "verdict": "PASS",
+   "reward": 0.0,
+   "command": "候选启动后台进程延迟写 reward",
+   "expect": "最终 reward 仍为 0.000",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=0.000000",
+    "bash: line 1: /workspace: Is a directory"
+   ]
+  },
+  {
+   "case": "anticheat_completion_artifacts",
+   "verdict": "PASS",
+   "reward": 0.0,
+   "command": "预置伪造 reward/status/JUnit/scoring-report 后运行 test.sh",
+   "expect": "全部完成制品由受信 verifier 重建，最终 reward=0.000",
+   "note": "",
+   "log_tail": [
+    "EXIT=0",
+    "REWARD=0.000000"
+   ]
+  }
+ ],
+ "candidate_entry": "/workspace",
+ "candidate_env_var": "PLANNER_WORKSPACE",
+ "reward_path": "/logs/verifier/reward.txt"
+}
