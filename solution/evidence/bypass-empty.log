@@ -1,4 +1,4 @@
-Command: docker run --rm --user 10001:10001 --network host -v /var/folders/8t/8rw7_pg16cx2c2mkh_cvpz8m0000gn/T/ice-quality-34lk5mzf/bypass-empty/workspace:/workspace:ro -v /Users/zhangchengcheng/work/ai-project/Trea/harbor/ice-storage-demand-planner/tests:/tests:ro -v /var/folders/8t/8rw7_pg16cx2c2mkh_cvpz8m0000gn/T/ice-quality-34lk5mzf/bypass-empty/logs:/logs harbor-quality:ice-storage-demand-planner bash /tests/test.sh
+Command: docker run --rm --user 10001:10001 --network host -v /var/folders/8t/8rw7_pg16cx2c2mkh_cvpz8m0000gn/T/ice-quality-924pmst5/bypass-empty/workspace:/workspace:ro -v /Users/zhangchengcheng/work/ai-project/Trea/harbor/ice-storage-demand-planner/tests:/tests:ro -v /var/folders/8t/8rw7_pg16cx2c2mkh_cvpz8m0000gn/T/ice-quality-924pmst5/bypass-empty/logs:/logs harbor-quality:ice-storage-demand-planner bash /tests/test.sh
 Exit: 0
 Reward: 0.0
 stdout:

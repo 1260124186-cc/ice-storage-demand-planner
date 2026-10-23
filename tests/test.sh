@@ -12,6 +12,11 @@ TRUSTED_TIMEOUT=/usr/bin/timeout
 # inner timeout 240s leaves cleanup time under the 300s verifier budget
 SITE_PACKAGES="$(mktemp -d /tmp/hbr-site.XXXXXX)"
 RUN_DIR="$(mktemp -d /tmp/hbr-run.XXXXXX)"
+TRUSTED_PYTHONPATH="$SITE_PACKAGES:/tests"
+TRUSTED_PYTHONNOUSERSITE=1
+TRUSTED_PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
+JUNIT_OPTION=--junitxml
+PYTEST_CACHE_OPTION="-p no:cacheprovider"
 finalized=0
 
 mkdir -p "$LOG_DIR"
@@ -48,11 +53,9 @@ trap on_exit EXIT
 trap on_signal INT TERM HUP
 
 if ! env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/tmp \
-    "$TRUSTED_PYTHON" -I -B -m pip install \
-    --no-cache-dir --disable-pip-version-check \
-    --no-index --find-links /tests/wheels --require-hashes --only-binary=:all: \
-    --target "$SITE_PACKAGES" -r /tests/requirements.txt \
-    > "$LOG_DIR/bootstrap.log" 2>&1; then
+    "$TRUSTED_PYTHON" -I -S -s -P -B /tests/bootstrap_wheels.py \
+    --wheel-dir /tests/wheels --requirements /tests/requirements.txt \
+    --target "$SITE_PACKAGES" > "$LOG_DIR/bootstrap.log" 2>&1; then
   write_failure "offline dependency bootstrap failed"
   exit 0
 fi
@@ -62,18 +65,17 @@ if [[ "$EUID" -eq 0 ]]; then
   chown worker:worker "$RUN_DIR"
 fi
 
-PYTEST_COMMAND="cd /workspace && env -i \
-PATH=/usr/local/bin:/usr/bin:/bin HOME=/tmp TMPDIR='$RUN_DIR' \
-PYTHONPATH='$SITE_PACKAGES:/tests' PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
-'$TRUSTED_TIMEOUT' --signal=TERM --kill-after=10s 240s \
-'$TRUSTED_PYTHON' -S -s -P -B -c 'import pytest; raise SystemExit(pytest.main())' \
--p no:cacheprovider --junitxml='$RUN_DIR/junit.xml' /tests/test_outputs.py"
-
 set +e
 if [[ "$EUID" -eq 0 ]]; then
-  /bin/su -s /bin/bash worker -c "$PYTEST_COMMAND" > "$RUN_DIR/pytest.log" 2>&1
+  /bin/su -s /bin/bash worker -c \
+    "/tests/run_pytest.sh '$SITE_PACKAGES' '$RUN_DIR' '$TRUSTED_PYTHON' \
+     '$TRUSTED_TIMEOUT' '$JUNIT_OPTION' '$PYTEST_CACHE_OPTION'" \
+    > "$RUN_DIR/pytest.log" 2>&1
 else
-  /bin/bash -c "$PYTEST_COMMAND" > "$RUN_DIR/pytest.log" 2>&1
+  /bin/bash /tests/run_pytest.sh \
+    "$SITE_PACKAGES" "$RUN_DIR" "$TRUSTED_PYTHON" "$TRUSTED_TIMEOUT" \
+    "$JUNIT_OPTION" "$PYTEST_CACHE_OPTION" \
+    > "$RUN_DIR/pytest.log" 2>&1
 fi
 pytest_status=$?
 set -e
@@ -88,7 +90,7 @@ fi
 
 cp "$RUN_DIR/junit.xml" "$REPORT_FILE"
 
-# The trusted /tests/score.py parser uses ET.parse on this structured report.
+# score.py validates this structured report with ET.parse before writing reward.
 if ! env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/tmp \
     "$TRUSTED_PYTHON" -S -s -P -B /tests/score.py \
     "$REPORT_FILE" "$REWARD_FILE" "$STATUS_FILE" "$SCORING_FILE" "$pytest_status"; then
