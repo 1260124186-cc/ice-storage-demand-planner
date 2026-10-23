@@ -10,10 +10,10 @@
   },
   "answer_verification": "测试中的独立 reference 在 inventory_step_kwh_th 网格上枚举每小时可用蓄冰状态，用 Decimal 精确累加电度费与需量费，并对 (期末库存, 计费需量) 状态做动态规划；参考解和测试均按同一套题面公式独立实现，再逐项复算样例及小规模全枚举案例",
   "environment": {
-    "base_image": "python:3.12.8-slim-bookworm@sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0",
+    "base_image": "python:3.12.8-alpine@sha256:ba13ef990f6e5d13014e9e8d04c02a8fdb0fe53d6dccf6e19147f316e6cc3a84",
     "dependencies_locked": true,
     "allow_internet": true,
-    "network_reason": "业务程序只依赖 Python 标准库；判定阶段需要按哈希从 PyPI 安装 pytest，真实模型运行还需要容器内 Codex CLI 连接本地代理",
+    "network_reason": "业务程序只依赖 Python 标准库；判定阶段需要按哈希从 PyPI 安装 pytest，真实模型由 Harbor 外部代理运行，不写入题目镜像",
     "architectures": [
       "amd64",
       "arm64"
